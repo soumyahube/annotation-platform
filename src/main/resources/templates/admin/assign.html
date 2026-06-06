@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Assigner des annotateurs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 { color: #333; }
+        .info-card {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .annotator-list {
+            margin: 20px 0;
+        }
+        .annotator-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            margin-right: 15px;
+            color: #4CAF50;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="nav-links">
+        <a href="/home">🏠 Accueil</a>
+        <a href="/admin/datasets">📊 Datasets</a>
+    </div>
+
+    <h1>📌 Assigner des annotateurs</h1>
+
+    <!-- Message normal (succès ou erreur) -->
+    <div th:if="${message}" class="message" th:classappend="${success} ? 'success' : 'error'" th:text="${message}"></div>
+
+    <!-- ⚠️ NOUVEAU : Message d'avertissement pour annotateurs insuffisants -->
+    <div th:if="${param.warning}" class="message warning">
+        ⚠️ <strong>Attention :</strong> Le nombre d'annotateurs est inférieur à 3.
+        Cela peut affecter la qualité des annotations et le calcul des métriques d'agrément (Fleiss Kappa).
+    </div>
+
+    <div class="info-card" th:if="${dataset != null}">
+        <h3 th:text="${dataset.name}"></h3>
+        <p><strong>Description:</strong> <span th:text="${dataset.description}"></span></p>
+        <p><strong>Type:</strong> <span th:text="${dataset.type}"></span></p>
+        <p><strong>Classes possibles:</strong> <span th:text="${dataset.classes}"></span></p>
+        <p><strong>Nombre de textes à annoter:</strong> <span th:text="${dataset.textUnits.size()}"></span></p>
+        <p><strong>Nombre d'annotateurs disponibles:</strong> <span th:text="${annotators != null ? annotators.size() : 0}"></span></p>
+    </div>
+
+    <form th:action="@{/admin/datasets/{id}/assign/submit(id=${dataset.id})}" method="post">
+        <h2>👥 Choisir les annotateurs (3 minimum recommandé) :</h2>
+        <div class="annotator-list">
+            <div th:each="annotator : ${annotators}" class="annotator-item">
+                <label>
+                    <input type="checkbox" name="annotatorIds" th:value="${annotator.id}"/>
+                    <strong th:text="${annotator.username}"></strong>
+                    <span style="color: #666;"> (Annotateur)</span>
+                </label>
+            </div>
+            <div th:if="${annotators == null or annotators.empty}">
+                <p style="color: red;">⚠️ Aucun annotateur disponible. Veuillez d'abord créer des comptes annotateurs !</p>
+            </div>
+        </div>
+
+        <button type="submit" th:disabled="${annotators == null or annotators.empty}">🎯 Distribuer les tâches</button>
+    </form>
+
+    <div style="margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 4px;">
+        <strong>ℹ️ Information :</strong>
+        <ul>
+            <li>Chaque texte sera assigné à <strong>tous les annotateurs sélectionnés</strong></li>
+            <li>Les annotateurs verront leurs tâches dans leur espace personnel</li>
+            <li>Une tâche déjà existante ne sera pas dupliquée</li>
+        </ul>
+    </div>
+</div>
+</body>
+</html>

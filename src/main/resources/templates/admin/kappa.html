@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Fleiss Kappa - Accord inter-annotateurs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .dataset-info {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .kappa-value {
+            font-size: 72px;
+            font-weight: bold;
+            margin: 30px 0;
+        }
+        .interpretation {
+            font-size: 28px;
+            margin: 20px 0;
+        }
+        .excellent {
+            color: #4CAF50;
+        }
+        .good {
+            color: #8BC34A;
+        }
+        .moderate {
+            color: #FF9800;
+        }
+        .poor {
+            color: #f44336;
+        }
+        .description {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .scale {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 8px;
+        }
+        .scale-item {
+            display: inline-block;
+            width: 18%;
+            font-size: 12px;
+            text-align: center;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            margin-right: 15px;
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="nav-links">
+        <a href="/home">🏠 Accueil</a>
+        <a href="/admin/datasets">📊 Retour aux datasets</a>
+    </div>
+
+    <h1>📊 Fleiss Kappa</h1>
+    <h3>Mesure d'accord inter-annotateurs</h3>
+
+    <div class="dataset-info">
+        <strong>Dataset :</strong> <span th:text="${dataset.name}"></span><br>
+        <strong>Type :</strong> <span th:text="${dataset.type}"></span><br>
+        <strong>Classes :</strong> <span th:text="${dataset.classes}"></span>
+    </div>
+
+    <div class="kappa-value" th:classappend="${colorClass}" th:text="${kappa}"></div>
+
+    <div class="interpretation" th:classappend="${colorClass}" th:text="${interpretation}"></div>
+
+    <div class="description">
+        <p><strong>ℹ️ Qu'est-ce que le Fleiss Kappa ?</strong></p>
+        <p>Le Fleiss Kappa mesure l'accord entre plusieurs annotateurs. Plus la valeur est proche de 1, plus l'accord est fort.</p>
+    </div>
+
+    <div class="scale">
+        <p><strong>📈 Échelle d'interprétation :</strong></p>
+        <div>
+            <span class="scale-item" style="color:#f44336;">&lt; 0.21<br>Faible</span>
+            <span class="scale-item" style="color:#FF9800;">0.21-0.40<br>Correct</span>
+            <span class="scale-item" style="color:#8BC34A;">0.41-0.60<br>Modéré</span>
+            <span class="scale-item" style="color:#4CAF50;">0.61-0.80<br>Substantiel</span>
+            <span class="scale-item" style="color:#2E7D32;">0.81-1.00<br>Parfait</span>
+        </div>
+    </div>
+
+    <button onclick="window.location.href='/admin/datasets'">← Retour à la liste des datasets</button>
+</div>
+</body>
+</html>

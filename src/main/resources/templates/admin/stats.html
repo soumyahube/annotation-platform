@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Administrateur</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+        .user-info {
+            background: #e8f5e9;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        /* Navigation */
+        .nav-links {
+            background: white;
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .nav-links a {
+            margin-right: 25px;
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        /* Progress Section */
+        .progress-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .progress-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .progress-bar-container {
+            background: #f0f0f0;
+            border-radius: 10px;
+            height: 30px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            height: 100%;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: width 0.5s;
+        }
+        /* Tables */
+        .data-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .data-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            border-left: 4px solid #4CAF50;
+            padding-left: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background-color: #f5f5f5;
+            color: #333;
+            font-weight: bold;
+        }
+        .progress-small {
+            width: 100px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+        }
+        .progress-small-fill {
+            background: #4CAF50;
+            height: 100%;
+            border-radius: 10px;
+        }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .badge-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <h1>📊 Dashboard Administrateur</h1>
+        <div class="user-info">
+            👤 Connecté : <span th:text="${#authentication.name}"></span>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-links">
+        <a href="/home">🏠 Accueil</a>
+        <a href="/admin/datasets">📊 Datasets</a>
+        <a href="/admin/users">👥 Annotateurs</a>
+        <a href="/admin/stats">📈 Dashboard</a>
+        <a href="/logout">🚪 Déconnexion</a>
+    </div>
+
+    <!-- Statistiques Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-number" th:text="${totalDatasets}">0</div>
+            <div class="stat-label">Datasets</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-number" th:text="${totalAnnotators}">0</div>
+            <div class="stat-label">Annotateurs actifs</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-number" th:text="${totalAnnotations}">0</div>
+            <div class="stat-label">Annotations effectuées</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-number" th:text="${totalTasks}">0</div>
+            <div class="stat-label">Tâches totales</div>
+        </div>
+    </div>
+
+    <!-- Progression globale -->
+    <div class="progress-section">
+        <div class="progress-title">🚀 Avancement global des annotations</div>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" th:style="'width: ' + ${globalProgress} + '%;'" th:text="${globalProgress} + '%'">0%</div>
+        </div>
+        <div style="margin-top: 10px; text-align: right; color: #666;">
+            <span th:text="${completedTasks}"></span> / <span th:text="${totalTasks}"></span> tâches complétées
+        </div>
+    </div>
+
+    <!-- Performance par annotateur -->
+    <div class="data-section">
+        <div class="data-title">👥 Performance par annotateur</div>
+        <table>
+            <thead>
+            <tr>
+                <th>Annotateur</th>
+                <th>Tâches assignées</th>
+                <th>Tâches complétées</th>
+                <th>Progression</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="stat : ${annotatorStats}">
+                <td th:text="${stat.username}">-</td>
+                <td th:text="${stat.totalTasks}">0</td>
+                <td th:text="${stat.completedTasks}">0</td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="progress-small">
+                            <div class="progress-small-fill" th:style="'width: ' + ${stat.progress} + '%;'"></div>
+                        </div>
+                        <span th:text="${stat.progress} + '%'">0%</span>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${annotatorStats.empty}">
+                <td colspan="4" style="text-align: center;">Aucun annotateur pour le moment</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Liste des datasets avec avancement -->
+    <div class="data-section">
+        <div class="data-title">📋 Avancement par dataset</div>
+        <table>
+            <thead>
+            <tr>
+                <th>Dataset</th>
+                <th>Type</th>
+                <th>Tâches totales</th>
+                <th>Complétées</th>
+                <th>Progression</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="stat : ${datasetStats}">
+                <td th:text="${stat.name}">-</td>
+                <td th:text="${stat.type}">-</td>
+                <td th:text="${stat.totalTasks}">0</td>
+                <td th:text="${stat.completedTasks}">0</td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="progress-small">
+                            <div class="progress-small-fill" th:style="'width: ' + ${stat.progress} + '%;'"></div>
+                        </div>
+                        <span th:text="${stat.progress} + '%'">0%</span>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${datasetStats.empty}">
+                <td colspan="5" style="text-align: center;">Aucun dataset pour le moment</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        Plateforme d'Annotation Collaborative - Projet NLP
+    </div>
+</div>
+</body>
+</html>

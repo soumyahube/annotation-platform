@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Détection des spammeurs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 { color: #333; }
+        .nav-links {
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            margin-right: 15px;
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .suspicious {
+            background-color: #fff3cd;
+        }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .badge-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .badge-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .progress-bar {
+            width: 100px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: #f44336;
+            height: 100%;
+            border-radius: 10px;
+        }
+        .stats-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="nav-links">
+        <a href="/home">🏠 Accueil</a>
+        <a href="/admin/datasets">📊 Datasets</a>
+        <a href="/admin/users">👥 Annotateurs</a>
+        <a href="/admin/stats">📈 Dashboard</a>
+        <a href="/admin/spammers">🚨 Détection spammeurs</a>
+        <a href="/logout">🚪 Déconnexion</a>
+    </div>
+
+    <h1>🚨 Détection des spammeurs</h1>
+
+    <div th:if="${hasSuspicious}" class="stats-card" style="background: #f8d7da; color: #721c24;">
+        ⚠️ <strong>Attention :</strong> Des annotateurs suspects ont été détectés. Veuillez consulter le tableau ci-dessous.
+    </div>
+    <div th:if="${!hasSuspicious}" class="stats-card" style="background: #d4edda; color: #155724;">
+        ✅ <strong>Félicitations :</strong> Aucun comportement suspect détecté parmi les annotateurs.
+    </div>
+
+    <h2>📊 Analyse par annotateur</h2>
+    <table th:if="${not #lists.isEmpty(results)}">
+        <thead>
+        <tr>
+            <th>Annotateur</th>
+            <th>Temps moyen</th>
+            <th>Distribution classes</th>
+            <th>Désaccord (%)</th>
+            <th>Score spam</th>
+            <th>Statut</th>
+            <th>Recommandation</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="result : ${results}" th:classappend="${result.suspicious} ? 'suspicious' : ''">
+            <td th:text="${result.username}">-</td>
+            <td>
+                <span th:text="${#numbers.formatDecimal(result.avgTimePerAnnotation, 1, 1)} + 's'"></span>
+                <span th:if="${result.tooFast}" style="color: red;"> ⚡ Trop rapide</span>
+            </td>
+            <td>
+                    <span th:each="entry : ${result.classDistribution}">
+                        <span class="badge">[[${entry.key}]]: [[${entry.value}]]</span>
+                    </span>
+            </td>
+            <td th:text="${#numbers.formatDecimal(result.disagreementRate, 1, 1)} + '%'"></td>
+            <td>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" th:style="'width: ' + ${result.spamScore} + '%; background: ' + (${result.spamScore} > 60 ? '#f44336' : '#ff9800') + ';'"></div>
+                    </div>
+                    <span th:text="${result.spamScore} + '/100'"></span>
+                </div>
+            </td>
+            <td>
+                <span th:if="${result.suspicious}" class="badge badge-danger">🚨 Suspect</span>
+                <span th:if="${!result.suspicious}" class="badge badge-success">✅ Normal</span>
+            </td>
+            <td th:text="${result.recommendation}">-</td>
+        </tr>
+        </tbody>
+    </table>
+    <p th:if="${#lists.isEmpty(results)}">Aucun annotateur disponible.</p>
+
+    <div th:if="${not #lists.isEmpty(randomAnnotators)}" class="stats-card" style="margin-top: 20px; background: #f8d7da;">
+        <h3>🎲 Annotateurs aléatoires détectés :</h3>
+        <ul>
+            <li th:each="annotator : ${randomAnnotators}" th:text="${annotator.username}"></li>
+        </ul>
+        <p>Ces annotateurs annotent de manière aléatoire. Leurs annotations devraient être vérifiées ou exclues du jeu de données d'entraînement.</p>
+    </div>
+</div>
+</body>
+</html>

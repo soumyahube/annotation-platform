@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des annotateurs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 { color: #333; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .btn-edit {
+            background-color: #2196F3;
+            padding: 5px 10px;
+            text-decoration: none;
+            color: white;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .btn-delete {
+            background-color: #f44336;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+        }
+        .btn-enable {
+            background-color: #4CAF50;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+        }
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            margin-right: 15px;
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .status-active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .status-disabled {
+            background-color: #f44336;
+            color: white;
+        }
+        .card {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        small {
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="nav-links">
+        <a href="/home">🏠 Accueil</a>
+        <a href="/admin/datasets">📊 Datasets</a>
+        <a href="/admin/users">👥 Annotateurs</a>
+        <a href="/admin/stats">📊 Stats</a>
+    </div>
+
+    <h1>👥 Gestion des annotateurs</h1>
+
+    <div th:if="${message}" class="message" th:classappend="${success} ? 'success' : 'error'" th:utext="${message}"></div>
+
+    <!-- Formulaire d'ajout -->
+    <div class="card">
+        <h2>➕ Ajouter un annotateur</h2>
+        <form th:action="@{/admin/users/add}" method="post">
+            <div class="form-group">
+                <label>Nom d'utilisateur (login) *</label>
+                <input type="text" name="username" required/>
+                <small>Utilisé pour se connecter</small>
+            </div>
+            <div class="form-group">
+                <label>Prénom</label>
+                <input type="text" name="firstName"/>
+            </div>
+            <div class="form-group">
+                <label>Nom</label>
+                <input type="text" name="lastName"/>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email"/>
+                <small>Optionnel - pour envoyer le mot de passe</small>
+            </div>
+            <button type="submit">✅ Ajouter</button>
+        </form>
+        <p style="margin-top: 10px; font-style: italic; color: #666;">ℹ️ Le mot de passe est généré automatiquement.</p>
+    </div>
+
+    <!-- Liste des annotateurs -->
+    <h2>📋 Liste des annotateurs</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nom d'utilisateur</th>
+            <th>Prénom</th>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Statut</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${annotators}">
+            <td th:text="${user.id}">10</td>
+            <td th:text="${user.username}">-</td>
+            <td th:text="${user.firstName != null ? user.firstName : '-'}">-</td>
+            <td th:text="${user.lastName != null ? user.lastName : '-'}">-</td>
+            <td th:text="${user.email != null ? user.email : '-'}">-</td>
+            <td>
+                <span th:if="${user.enabled}" class="status-badge status-active">✅ Actif</span>
+                <span th:unless="${user.enabled}" class="status-badge status-disabled">❌ Désactivé</span>
+            </td>
+            <td>
+                <a th:href="@{/admin/users/edit/{id}(id=${user.id})}" class="btn-edit">✏️ Modifier</a>
+                <form th:action="@{/admin/users/delete/{id}(id=${user.id})}" method="post" style="display:inline;">
+                    <button type="submit" class="btn-delete" onclick="return confirm('Désactiver cet annotateur ? (suppression logique)')">🗑️ Désactiver</button>
+                </form>
+                <form th:action="@{/admin/users/enable/{id}(id=${user.id})}" method="post" style="display:inline;" th:if="${!user.enabled}">
+                    <button type="submit" class="btn-enable">🔄 Réactiver</button>
+                </form>
+            </td>
+        </tr>
+        <tr th:if="${annotators.empty}">
+            <td colspan="7" style="text-align: center;">Aucun annotateur pour le moment</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p style="margin-top: 20px; font-style: italic; color: #666;">
+        ℹ️ Note : La suppression est logique (l'annotateur est désactivé, ses annotations sont conservées).
+    </p>
+</div>
+</body>
+</html>

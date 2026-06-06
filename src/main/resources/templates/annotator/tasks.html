@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes tâches - Annotateur</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 { color: #333; }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .progress-fill {
+            background-color: #4CAF50;
+            height: 20px;
+            border-radius: 5px;
+            text-align: center;
+            color: white;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            margin-right: 15px;
+            color: #4CAF50;
+        }
+        .btn-annotate {
+            background-color: #2196F3;
+            color: white;
+            padding: 5px 10px;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .btn-annotate:hover {
+            background-color: #0b7dda;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .badge-pending {
+            background-color: #ff9800;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .badge-completed {
+            background-color: #4CAF50;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="nav-links">
+        <a href="/home">🏠 Accueil</a>
+        <a href="/annotator/tasks">📋 Mes tâches</a>
+        <a href="/logout">🚪 Déconnexion</a>
+    </div>
+
+    <h1>📋 Mes tâches d'annotation</h1>
+
+    <div th:if="${success}" class="success" th:text="${success}"></div>
+    <div th:if="${error}" class="error" th:text="${error}"></div>
+
+    <!-- Statistiques -->
+    <div class="stats-card">
+        <div class="stat">
+            <div class="stat-number" th:text="${totalTasks}">0</div>
+            <div class="stat-label">Total tâches</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number" th:text="${completedCount}">0</div>
+            <div class="stat-label">Complétées</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number" th:text="${progress} + '%'">0%</div>
+            <div class="stat-label">Progression</div>
+        </div>
+    </div>
+    <div class="progress-bar">
+        <div class="progress-fill" th:style="'width: ' + ${progress} + '%;'" th:text="${progress} + '%'"></div>
+    </div>
+
+    <!-- Tâches en attente -->
+    <h2>⏳ Tâches à réaliser</h2>
+    <table th:if="${pendingTasks != null and pendingTasks.size() > 0}">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Dataset</th>
+            <th>Texte</th>
+            <th>Type</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="task : ${pendingTasks}">
+            <td th:text="${task.id}">10</td>
+            <td th:text="${task.dataset.name}">-</td>
+            <td th:text="${task.textUnit.text1.length() > 100 ? #strings.substring(task.textUnit.text1, 0, 100) + '...' : task.textUnit.text1}">-</td>
+            <td><span class="badge-pending">En attente</span></td>
+            <td><a class="btn-annotate" th:href="@{/annotator/annotate/{taskId}(taskId=${task.id})}">✏️ Annoter</a></td>
+        </tr>
+        </tbody>
+    </table>
+    <p th:if="${pendingTasks == null or pendingTasks.size() == 0}" style="color: green;">✅ Toutes vos tâches sont complétées !</p>
+
+    <!-- Tâches complétées -->
+    <h2>✅ Tâches complétées</h2>
+    <table th:if="${completedTasks != null and completedTasks.size() > 0}">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Dataset</th>
+            <th>Texte</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="task : ${completedTasks}">
+            <td th:text="${task.id}">10</td>
+            <td th:text="${task.dataset.name}">-</td>
+            <td th:text="${task.textUnit.text1.length() > 100 ? #strings.substring(task.textUnit.text1, 0, 100) + '...' : task.textUnit.text1}">-</td>
+            <td><span class="badge-completed">✓ Complété</span></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
