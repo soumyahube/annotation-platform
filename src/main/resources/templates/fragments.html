@@ -70,13 +70,11 @@
 </div>
 
 <!-- Fragment Topbar -->
+<!-- Fragment Topbar -->
 <div th:fragment="topbar(title)">
     <header class="topbar">
         <div class="topbar-title" th:text="${title}">Titre</div>
         <div class="topbar-user">
-            <div class="avatar" th:classappend="${#authorization.expression('hasRole(''ADMIN'')')} ? 'avatar-admin' : 'avatar-annotator'">
-                <span th:text="${#authentication.name.charAt(0)}"></span>
-            </div>
             <span th:text="${#authentication.name}"></span>
             <span th:if="${#authorization.expression('hasRole(''ADMIN'')')}" class="badge badge-blue ml-1">Admin</span>
             <span th:if="${#authorization.expression('hasRole(''ANNOTATOR'')')}" class="badge badge-green ml-1">Annotateur</span>

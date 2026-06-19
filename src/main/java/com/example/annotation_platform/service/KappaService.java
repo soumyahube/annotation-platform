@@ -24,31 +24,40 @@ public class KappaService {
         List<TextUnit> textUnits = dataset.getTextUnits();
 
         System.out.println("=== CALCUL KAPPA ===");
+        System.out.println("Dataset ID: " + dataset.getId());
+        System.out.println("Dataset Name: " + dataset.getName());
         System.out.println("Nombre de textes total : " + textUnits.size());
 
         if (textUnits.isEmpty()) {
             return 0.0;
         }
 
-        // 🔧 CORRECTION : Filtrer UNIQUEMENT les textes qui ont des annotations
+        // 🔧 CORRECTION : Ne prendre que les textes avec AU MOINS 2 annotations
         List<TextUnit> annotatedTexts = new ArrayList<>();
         Map<Long, List<Annotation>> annotationsByText = new HashMap<>();
 
         for (TextUnit textUnit : textUnits) {
             List<Annotation> annotations = annotationRepository.findByTextUnit(textUnit);
-            if (!annotations.isEmpty()) {
+
+            // 🔧 IGNORER les textes avec moins de 2 annotations
+            if (annotations.size() >= 2) {
                 annotatedTexts.add(textUnit);
                 annotationsByText.put(textUnit.getId(), annotations);
-                System.out.println("Texte " + textUnit.getId() + " : " + annotations.size() + " annotations");
+                System.out.println("Texte " + textUnit.getId() + " : " + annotations.size() + " annotations (inclus)");
+                for (Annotation ann : annotations) {
+                    System.out.println("   - annotateur " + ann.getAnnotator().getId() + " : " + ann.getSelectedClass());
+                }
+            } else if (annotations.size() == 1) {
+                System.out.println("Texte " + textUnit.getId() + " : " + annotations.size() + " annotation (IGNORE - pas assez de données)");
             }
         }
 
         if (annotatedTexts.isEmpty()) {
-            System.out.println("Aucun texte annoté");
+            System.out.println("Aucun texte avec assez d'annotations (minimum 2)");
             return 0.0;
         }
 
-        System.out.println("Textes annotés : " + annotatedTexts.size() + " / " + textUnits.size());
+        System.out.println("Textes inclus dans le calcul : " + annotatedTexts.size() + " / " + textUnits.size());
 
         // Récupérer les annotateurs UNIQUEMENT pour ce dataset
         List<User> annotators = annotationsByText.values().stream()
@@ -60,6 +69,7 @@ public class KappaService {
         System.out.println("Nombre d'annotateurs : " + annotators.size());
 
         if (annotators.size() < 2) {
+            System.out.println("Moins de 2 annotateurs");
             return 0.0;
         }
 
@@ -67,6 +77,9 @@ public class KappaService {
         int n = annotators.size();
         int k = classes.length;
         int N = annotatedTexts.size();
+
+        System.out.println("Nombre de classes : " + k);
+        System.out.println("Classes : " + Arrays.toString(classes));
 
         int[][] ratings = new int[N][k];
 
@@ -79,7 +92,7 @@ public class KappaService {
                     continue;
                 }
                 for (int c = 0; c < k; c++) {
-                    if (annotation.getSelectedClass().equals(classes[c])) {
+                    if (annotation.getSelectedClass().trim().equals(classes[c].trim())) {
                         ratings[i][c]++;
                         break;
                     }
@@ -88,7 +101,7 @@ public class KappaService {
         }
 
         // Afficher la matrice
-        System.out.println("\nMatrice des annotations :");
+        System.out.println("\nMatrice des annotations (textes avec 2+ annotations) :");
         for (int i = 0; i < N; i++) {
             System.out.print("Texte " + (i+1) + " : ");
             for (int j = 0; j < k; j++) {
@@ -104,6 +117,8 @@ public class KappaService {
             }
         }
 
+        System.out.println("Total assignments : " + totalAssignments);
+
         if (totalAssignments == 0) {
             return 0.0;
         }
@@ -116,6 +131,7 @@ public class KappaService {
                 sum += ratings[i][j];
             }
             p_j[j] = (double) sum / totalAssignments;
+            System.out.println("p_" + j + " = " + p_j[j]);
         }
 
         // Calculer P_i
@@ -126,6 +142,7 @@ public class KappaService {
                 sum += Math.pow(ratings[i][j], 2);
             }
             P_i[i] = (sum - n) / (n * (n - 1));
+            System.out.println("P_" + i + " = " + P_i[i]);
         }
 
         // Calculer P_bar
@@ -134,25 +151,32 @@ public class KappaService {
             P_bar += P_i[i];
         }
         P_bar /= N;
+        System.out.println("P_bar = " + P_bar);
 
         // Calculer P_e
         double P_e = 0;
         for (int j = 0; j < k; j++) {
             P_e += Math.pow(p_j[j], 2);
         }
+        System.out.println("P_e = " + P_e);
 
         if (P_e == 1.0) {
             return 1.0;
         }
 
         double kappa = (P_bar - P_e) / (1 - P_e);
+        System.out.println("Kappa brut = " + kappa);
 
         // Si Kappa est négatif, le mettre à 0
         if (kappa < 0) {
             kappa = 0.0;
         }
 
-        return Math.round(kappa * 100.0) / 100.0;
+        double result = Math.round(kappa * 100.0) / 100.0;
+        System.out.println("Kappa final = " + result);
+        System.out.println("=== FIN CALCUL KAPPA ===");
+
+        return result;
     }
 
     public String interpretKappa(double kappa) {
