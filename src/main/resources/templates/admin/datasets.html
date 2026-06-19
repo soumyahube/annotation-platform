@@ -1,245 +1,147 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Datasets</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 { color: #333; }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .message {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-        }
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .nav-links {
-            margin-bottom: 20px;
-        }
-        .nav-links a {
-            margin-right: 15px;
-            color: #4CAF50;
-            text-decoration: none;
-        }
-        .btn-export {
-            background-color: #FF9800;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            text-decoration: none;
-            margin-right: 5px;
-        }
-        .btn-export:hover {
-            background-color: #F57C00;
-        }
-        .btn-kappa {
-            background-color: #9C27B0;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            text-decoration: none;
-            margin-right: 5px;
-        }
-        .btn-kappa:hover {
-            background-color: #7B1FA2;
-        }
-        .btn-details {
-            background-color: #2196F3;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            text-decoration: none;
-            margin-right: 5px;
-        }
-        .btn-details:hover {
-            background-color: #0b7dda;
-        }
-        .btn-assign {
-            background-color: #4CAF50;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            text-decoration: none;
-            margin-right: 5px;
-        }
-        .btn-assign:hover {
-            background-color: #45a049;
-        }
-        .actions-cell {
-            white-space: nowrap;
-        }
-        progress {
-            width: 80px;
-            height: 15px;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
 </head>
 <body>
-<div class="container">
-    <div class="nav-links">
-        <a href="/home">🏠 Accueil</a>
-        <a href="/admin/users">👥 Annotateurs</a>
-        <a href="/admin/stats">📊 Stats</a>
-        <a href="/admin/spammers">🚨 Spammeurs</a>
-    </div>
 
-    <h1>📊 Gestion des Datasets</h1>
+<div class="app-layout">
 
-    <div th:if="${message}" class="message" th:classappend="${success} ? 'success' : 'error'" th:text="${message}"></div>
+    <div th:replace="~{fragments :: sidebar-admin}"></div>
 
-    <!-- Formulaire création dataset -->
-    <h2>➕ Créer un nouveau dataset</h2>
-    <form th:action="@{/admin/datasets/create}" method="post" enctype="multipart/form-data">
-        <div class="form-group">
-            <label>Nom du dataset *</label>
-            <input type="text" name="name" required/>
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="topbar-title"><i class="fas fa-database"></i> Gestion des Datasets</div>
+            <div class="topbar-user">
+                <div class="avatar avatar-admin">
+                    <span th:text="${#authentication.name.charAt(0)}"></span>
+                </div>
+                <span th:text="${#authentication.name}"></span>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-body">
+
+            <!-- Messages flash -->
+            <div th:if="${message}" class="alert" th:classappend="${success} ? 'alert-success' : 'alert-error'">
+                <span class="alert-icon"><i class="fas fa-info-circle"></i></span>
+                <span th:text="${message}"></span>
+            </div>
+
+            <!-- Formulaire création dataset -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-plus-circle"></i> Créer un nouveau dataset</div>
+                </div>
+                <form th:action="@{/admin/datasets/create}" method="post" enctype="multipart/form-data" class="form-section">
+                    <div class="form-group">
+                        <label for="name">Nom du dataset *</label>
+                        <input type="text" id="name" name="name" placeholder="Ex: Analyse sentiment FR" required/>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" rows="2" placeholder="Description optionnelle..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="type">Type de tâche *</label>
+                            <select id="type" name="type" required>
+                                <option value="TEXTE"><i class="fas fa-file-alt"></i> Texte simple (analyse sentiment)</option>
+                                <option value="PAIRE"><i class="fas fa-exchange-alt"></i> Paire de textes (similarité)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="classes">Classes possibles *</label>
+                            <input type="text" id="classes" name="classes" placeholder="Ex: positive;negative" required/>
+                            <small class="hint">Séparez les classes par des points-virgules (;)</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="file">Fichier CSV *</label>
+                        <input type="file" id="file" name="file" accept=".csv" required/>
+                        <small class="hint">
+                            Format texte: <code>id,texte</code><br>
+                            Format paire: <code>id,texte1,texte2</code>
+                        </small>
+                    </div>
+
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Importer le dataset</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Liste des datasets existants -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-list"></i> Datasets existants</div>
+                    <span class="badge badge-blue" th:text="${totalItems != null ? totalItems + ' dataset(s)' : '0 dataset'}">0 dataset</span>
+                </div>
+
+                <div class="table-wrap">
+                    <table th:if="${not #lists.isEmpty(datasets)}">
+                        <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Avancement</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="dataset : ${datasets}">
+                            <td th:text="${dataset.name}">-</td>
+                            <td th:text="${dataset.description != null ? dataset.description : '-'}">-</td>
+                            <td><span class="badge" th:classappend="${dataset.type == 'TEXTE'} ? 'badge-blue' : 'badge-purple'" th:text="${dataset.type == 'TEXTE'} ? 'Texte' : 'Paire'"></span></td>
+                            <td style="min-width: 120px;">
+                                <div class="progress-inline">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" th:style="'width: ' + ${progressMap[dataset.id]} + '%;'"></div>
+                                    </div>
+                                    <span class="progress-pct" th:text="${progressMap[dataset.id]} + '%'"></span>
+                                </div>
+                            </td>
+                            <td class="nowrap">
+                                <a th:href="@{/admin/datasets/{id}/details(id=${dataset.id})}" class="btn btn-sm btn-outline"><i class="fas fa-search"></i> Détails</a>
+                                <a th:href="@{/admin/datasets/{id}/assign(id=${dataset.id})}" class="btn btn-sm btn-outline"><i class="fas fa-user-plus"></i> Assigner</a>
+                                <a th:href="@{/admin/datasets/{id}/export/csv(id=${dataset.id})}" class="btn btn-sm btn-outline"><i class="fas fa-file-csv"></i> CSV</a>
+                                <a th:href="@{/admin/datasets/{id}/kappa(id=${dataset.id})}" class="btn btn-sm btn-purple"><i class="fas fa-chart-bar"></i> Kappa</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <p th:if="${#lists.isEmpty(datasets)}" class="table-empty">Aucun dataset pour le moment</p>
+                </div>
+
+                <!-- Pagination -->
+                <div th:if="${totalPages != null and totalPages > 1}">
+                    <div class="pagination">
+                        <a th:if="${currentPage > 0}" th:href="@{/admin/datasets(page=${currentPage - 1}, size=${size})}"><i class="fas fa-chevron-left"></i> Précédent</a>
+                        <span class="current" th:text="${currentPage + 1}"></span>
+                        <a th:if="${currentPage + 1 < totalPages}" th:href="@{/admin/datasets(page=${currentPage + 1}, size=${size})}">Suivant <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                    <div class="pagination-info">
+                        Page <span th:text="${currentPage + 1}"></span> sur <span th:text="${totalPages}"></span> —
+                        Total : <span th:text="${totalItems}"></span> dataset(s)
+                    </div>
+                </div>
+            </div>
+
         </div>
-
-        <div class="form-group">
-            <label>Description</label>
-            <textarea name="description" rows="2"></textarea>
-        </div>
-
-        <div class="form-group">
-            <label>Type de tâche *</label>
-            <select name="type" required>
-                <option value="TEXTE">Texte simple (analyse sentiment)</option>
-                <option value="PAIRE">Paire de textes (similarité)</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Classes possibles *</label>
-            <input type="text" name="classes" placeholder="Ex: positive;negative" required/>
-            <small>Séparez les classes par des points-virgules (;)</small>
-        </div>
-
-        <div class="form-group">
-            <label>Fichier CSV *</label>
-            <input type="file" name="file" accept=".csv" required/>
-            <small>
-                Format pour texte simple: id,texte<br>
-                Format pour paire: id,texte1,texte2
-            </small>
-        </div>
-
-        <button type="submit">📤 Importer le dataset</button>
-    </form>
-
-    <!-- Liste des datasets existants -->
-    <h2>📋 Datasets existants</h2>
-    <table th:if="${not #lists.isEmpty(datasets)}">
-        <thead>
-        <tr>
-            <th>Nom</th>
-            <th>Description</th>
-            <th>Type</th>
-            <th>% Avancement</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="dataset : ${datasets}">
-            <td th:text="${dataset.name}">-</td>
-            <td th:text="${dataset.description != null ? dataset.description : '-'}">-</td>
-            <td th:text="${dataset.type}">-</td>
-            <td style="text-align: center;">
-                <span th:text="${progressMap[dataset.id]} + '%'"></span>
-                <br>
-                <progress th:value="${progressMap[dataset.id]}" max="100"></progress>
-            </td>
-            <td class="actions-cell">
-                <a th:href="@{/admin/datasets/{id}/details(id=${dataset.id})}" class="btn-details">🔍 Détails</a>
-                <a th:href="@{/admin/datasets/{id}/assign(id=${dataset.id})}" class="btn-assign">➕ Assigner</a>
-                <a th:href="@{/admin/datasets/{id}/export/csv(id=${dataset.id})}" class="btn-export">📥 CSV</a>
-                <a th:href="@{/admin/datasets/{id}/kappa(id=${dataset.id})}" class="btn-kappa">📊 Kappa</a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-    <p th:if="${#lists.isEmpty(datasets)}" style="text-align: center;">Aucun dataset pour le moment</p>
-
-    <!-- Pagination -->
-    <div th:if="${totalPages != null and totalPages > 1}" style="margin-top: 30px; text-align: center;">
-        <div style="display: inline-flex; gap: 10px; align-items: center;">
-            <a th:if="${currentPage > 0}"
-               th:href="@{/admin/datasets(page=${currentPage-1}, size=${size})}"
-               style="background-color: #4CAF50; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">
-                ◀ Précédent
-            </a>
-
-            <span style="padding: 8px 16px; background-color: #f5f5f5; border-radius: 4px;">
-                Page <span th:text="${currentPage + 1}"></span> sur <span th:text="${totalPages}"></span>
-            </span>
-
-            <a th:if="${currentPage + 1 < totalPages}"
-               th:href="@{/admin/datasets(page=${currentPage+1}, size=${size})}"
-               style="background-color: #4CAF50; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">
-                Suivant ▶
-            </a>
-        </div>
-        <div style="margin-top: 10px; font-size: 12px; color: #666;">
-            Total : <span th:text="${totalItems}"></span> dataset(s)
-        </div>
-    </div>
+    </main>
 </div>
+
 </body>
 </html>

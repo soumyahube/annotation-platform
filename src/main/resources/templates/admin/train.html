@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entraînement du modèle NLP</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<div class="app-layout">
+    <div th:replace="~{fragments :: sidebar-admin}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments :: topbar('Entraînement NLP')}"></div>
+
+        <div class="page-body">
+
+            <!-- Message -->
+            <div th:if="${message}" class="alert" th:classappend="${success} ? 'alert-success' : 'alert-error'">
+                <span class="alert-icon"><i class="fas fa-info-circle"></i></span>
+                <span th:utext="${message}"></span>
+            </div>
+
+            <!-- Card Upload -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-upload"></i> Importer un CSV pour l'entraînement</div>
+                </div>
+
+                <div class="alert alert-info">
+                    <span class="alert-icon"><i class="fas fa-info-circle"></i></span>
+                    <span>Téléchargez d'abord un dataset en CSV depuis "Gérer les Datasets", puis uploadez-le ici pour entraîner le modèle.</span>
+                </div>
+
+                <form th:action="@{/admin/train/upload}" method="post" enctype="multipart/form-data" class="form-section">
+                    <div class="form-group">
+                        <label for="file"><i class="fas fa-file-csv"></i> Choisir un fichier CSV</label>
+                        <input type="file" id="file" name="file" accept=".csv" required/>
+                        <small class="hint">Le CSV doit contenir les colonnes : texte, classe</small>
+                    </div>
+
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-brain"></i> Entraîner le modèle
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Logs -->
+            <div class="card mt-3" th:if="${logs != null}">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-terminal"></i> Logs d'entraînement</div>
+                </div>
+                <div class="log-console">
+                    <pre th:text="${logs}" style="margin: 0; white-space: pre-wrap; font-family: monospace;"></pre>
+                </div>
+            </div>
+
+            <!-- Métriques -->
+            <div class="card mt-3" th:if="${metrics != null and not #maps.isEmpty(metrics)}">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-chart-bar"></i> Métriques du modèle</div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card" th:if="${metrics.containsKey('accuracy')}">
+                        <div class="stat-icon-wrap stat-icon-blue"><i class="fas fa-bullseye"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-value" th:text="${metrics.accuracy + '%'}">-</div>
+                            <div class="stat-label">Accuracy</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" th:if="${metrics.containsKey('f1Score')}">
+                        <div class="stat-icon-wrap stat-icon-green"><i class="fas fa-chart-line"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-value" th:text="${metrics.f1Score + '%'}">-</div>
+                            <div class="stat-label">F1-Score</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" th:if="${metrics.containsKey('samples')}">
+                        <div class="stat-icon-wrap stat-icon-purple"><i class="fas fa-database"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-value" th:text="${metrics.samples}">-</div>
+                            <div class="stat-label">Échantillons</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" th:if="${metrics.containsKey('classes')}">
+                        <div class="stat-icon-wrap stat-icon-amber"><i class="fas fa-tags"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-value" th:text="${metrics.classes}">-</div>
+                            <div class="stat-label">Classes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

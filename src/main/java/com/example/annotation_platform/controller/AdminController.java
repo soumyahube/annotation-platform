@@ -1,10 +1,14 @@
 package com.example.annotation_platform.controller;
 
+import com.example.annotation_platform.dto.AnnotatorProgress;
+import com.example.annotation_platform.dto.AnnotatorStat;
+import com.example.annotation_platform.dto.DatasetStat;
 import com.example.annotation_platform.dto.SpammerDetectionResult;
 import com.example.annotation_platform.entity.*;
 import com.example.annotation_platform.repository.*;
 import com.example.annotation_platform.service.KappaService;
 import com.example.annotation_platform.service.SpammerDetectionService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,11 +24,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.http.HttpStatus;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import com.example.annotation_platform.controller.AnnotatorProgress;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.List;
 import java.util.Random;
@@ -434,13 +438,13 @@ public class AdminController {
 
         // Statistiques par annotateur
         List<User> annotators = userRepository.findByRolesName("ROLE_ANNOTATOR");
-        List<com.example.annotation_platform.controller.AnnotatorStat> annotatorStats = new ArrayList<>();
+        List<AnnotatorStat> annotatorStats = new ArrayList<>();
         for (User annotator : annotators) {
             long userTasks = annotationTaskRepository.countByAnnotator(annotator);
             long userCompleted = annotationTaskRepository.countByAnnotatorAndCompleted(annotator, true);
             int progress = userTasks > 0 ? (int) (userCompleted * 100 / userTasks) : 0;
 
-            com.example.annotation_platform.controller.AnnotatorStat stat = new AnnotatorStat();
+            AnnotatorStat stat = new AnnotatorStat();
             stat.setUsername(annotator.getUsername());
             stat.setTotalTasks((int) userTasks);
             stat.setCompletedTasks((int) userCompleted);
@@ -509,5 +513,168 @@ public class AdminController {
         model.addAttribute("colorClass", colorClass);
 
         return "admin/kappa";
+    }
+    @GetMapping("/train")
+    public String trainPage(Model model) {
+        return "admin/train";
+    }
+
+    @PostMapping("/train/start")
+    public String startTraining(RedirectAttributes redirectAttributes) {
+        try {
+            // Correction : chemin vers le bon dossier
+            String projectPath = System.getProperty("user.dir");
+            String scriptPath = projectPath + "\\annotation-platform\\train_model.py";
+
+            System.out.println("=== DEBUG ===");
+            System.out.println("Project path: " + projectPath);
+            System.out.println("Script path: " + scriptPath);
+
+            File scriptFile = new File(scriptPath);
+            System.out.println("Script exists: " + scriptFile.exists());
+
+            if (!scriptFile.exists()) {
+                redirectAttributes.addFlashAttribute("message", "❌ Script non trouvé à: " + scriptPath);
+                redirectAttributes.addFlashAttribute("logs", "Le fichier train_model.py n'existe pas à la racine du projet.");
+                return "redirect:/admin/train";
+            }
+
+            ProcessBuilder processBuilder = new ProcessBuilder("python", scriptPath);
+            processBuilder.directory(new File(projectPath));
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder logs = new StringBuilder();
+            String line;
+            String metricsJson = null;
+
+            while ((line = reader.readLine()) != null) {
+                logs.append(line).append("\n");
+                System.out.println("PYTHON OUTPUT: " + line);
+                if (line.contains("__METRICS__")) {
+                    metricsJson = line.replace("__METRICS__", "");
+                }
+            }
+
+            int exitCode = process.waitFor();
+            System.out.println("Exit code: " + exitCode);
+
+            Map<String, String> metrics = new HashMap<>();
+            if (metricsJson != null) {
+                ObjectMapper mapper = new ObjectMapper();
+                metrics = mapper.readValue(metricsJson, Map.class);
+            } else {
+                metrics.put("accuracy", "N/A");
+                metrics.put("f1Score", "N/A");
+            }
+
+            redirectAttributes.addFlashAttribute("logs", logs.toString());
+            redirectAttributes.addFlashAttribute("metrics", metrics);
+            redirectAttributes.addFlashAttribute("message", exitCode == 0 ? "✅ Entraînement terminé !" : "⚠️ Erreur: " + exitCode);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("message", "❌ Erreur: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("logs", "Erreur: " + e.toString());
+        }
+
+        return "redirect:/admin/train";
+    }
+    @PostMapping("/train/upload")
+    public String uploadAndTrain(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
+        try {
+            if (file.isEmpty()) {
+                redirectAttributes.addFlashAttribute("message", "❌ Veuillez sélectionner un fichier CSV !");
+                redirectAttributes.addFlashAttribute("success", false);
+                return "redirect:/admin/train";
+            }
+
+            // 🔧 CORRECTION : Utiliser le chemin absolu du projet
+            // Le projet est dans annotation-platform/annotation-platform
+            String projectPath = System.getProperty("user.dir");
+
+            // Si on est dans le dossier parent, corriger
+            if (projectPath.endsWith("annotation-platform") && !projectPath.endsWith("annotation-platform\\annotation-platform")) {
+                projectPath = projectPath + "\\annotation-platform";
+            }
+
+            System.out.println("=== DEBUG TRAIN ===");
+            System.out.println("Project path: " + projectPath);
+
+            // Créer le chemin vers le script Python
+            String scriptPath = projectPath + "\\train_model.py";
+            File scriptFile = new File(scriptPath);
+            System.out.println("Script path: " + scriptPath);
+            System.out.println("Script exists: " + scriptFile.exists());
+
+            if (!scriptFile.exists()) {
+                // Essayer un autre chemin
+                String altPath = "C:\\Users\\SOUMI\\Downloads\\annotation-platform\\annotation-platform\\train_model.py";
+                File altFile = new File(altPath);
+                System.out.println("Alternative path: " + altPath);
+                System.out.println("Alternative exists: " + altFile.exists());
+
+                if (altFile.exists()) {
+                    scriptPath = altPath;
+                    scriptFile = altFile;
+                } else {
+                    redirectAttributes.addFlashAttribute("message",
+                            "❌ Script Python non trouvé !\n" +
+                                    "Recherché à : " + scriptPath + "\n" +
+                                    "Alternative : " + altPath);
+                    redirectAttributes.addFlashAttribute("success", false);
+                    return "redirect:/admin/train";
+                }
+            }
+
+            // Sauvegarder le CSV uploadé
+            String csvPath = projectPath + "\\uploaded_dataset.csv";
+            File csvFile = new File(csvPath);
+            file.transferTo(csvFile);
+            System.out.println("CSV saved: " + csvPath);
+
+            // Lancer le script Python
+            ProcessBuilder processBuilder = new ProcessBuilder("python", scriptPath, csvPath);
+            processBuilder.directory(new File(projectPath));
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
+
+            // Lire la sortie
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder logs = new StringBuilder();
+            String line;
+            String metricsJson = null;
+
+            while ((line = reader.readLine()) != null) {
+                logs.append(line).append("\n");
+                System.out.println("PYTHON: " + line);
+                if (line.contains("__METRICS__")) {
+                    metricsJson = line.replace("__METRICS__", "");
+                }
+            }
+
+            int exitCode = process.waitFor();
+
+            Map<String, String> metrics = new HashMap<>();
+            if (metricsJson != null && !metricsJson.isEmpty() && !metricsJson.equals("{}")) {
+                ObjectMapper mapper = new ObjectMapper();
+                metrics = mapper.readValue(metricsJson, Map.class);
+            }
+
+            redirectAttributes.addFlashAttribute("logs", logs.toString());
+            redirectAttributes.addFlashAttribute("metrics", metrics);
+            redirectAttributes.addFlashAttribute("message", exitCode == 0 ?
+                    "✅ Entraînement terminé avec succès !" :
+                    "⚠️ Entraînement terminé avec des avertissements");
+            redirectAttributes.addFlashAttribute("success", exitCode == 0);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("message", "❌ Erreur: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("success", false);
+        }
+
+        return "redirect:/admin/train";
     }
 }

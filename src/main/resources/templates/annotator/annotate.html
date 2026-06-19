@@ -1,107 +1,87 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Annoter un texte</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1, h2 { color: #333; }
-        .text-card {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border-left: 4px solid #4CAF50;
-        }
-        .class-buttons {
-            display: flex;
-            gap: 15px;
-            margin: 20px 0;
-            flex-wrap: wrap;
-        }
-        .class-btn {
-            background-color: #2196F3;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .class-btn:hover {
-            background-color: #0b7dda;
-        }
-        .nav-links {
-            margin-bottom: 20px;
-        }
-        .nav-links a {
-            margin-right: 15px;
-            color: #4CAF50;
-        }
-        .info {
-            background: #e3f2fd;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-<div class="container">
-    <div class="nav-links">
-        <a href="/home">🏠 Accueil</a>
-        <a href="/annotator/tasks">📋 Retour aux tâches</a>
-        <a href="/logout">🚪 Déconnexion</a>
-    </div>
 
-    <h1>✏️ Annotation de texte</h1>
+<div class="app-layout">
 
-    <div class="info">
-        <strong>Dataset :</strong> <span th:text="${dataset.name}"></span><br>
-        <strong>Classes possibles :</strong> <span th:text="${dataset.classes}"></span>
-    </div>
+    <div th:replace="~{fragments :: sidebar-annotator}"></div>
 
-    <div class="text-card">
-        <h2>📄 Texte à annoter :</h2>
-        <p th:text="${textUnit.text1}" style="font-size: 18px; line-height: 1.6;"></p>
-        <div th:if="${textUnit.text2 != null}">
-            <hr>
-            <p><strong>Texte 2 :</strong></p>
-            <p th:text="${textUnit.text2}" style="font-size: 18px; line-height: 1.6;"></p>
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="topbar-title"><i class="fas fa-pen"></i> Annotation de texte</div>
+            <div class="topbar-user">
+                <div class="avatar avatar-annotator">
+                    <span th:text="${#authentication.name.charAt(0)}"></span>
+                </div>
+                <span th:text="${#authentication.name}"></span>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-body">
+
+            <!-- Informations du dataset -->
+            <div class="info-card mb-3" th:if="${dataset != null}">
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 8px;">
+                    <p><strong><i class="fas fa-database"></i> Dataset :</strong> <span th:text="${dataset.name}"></span></p>
+                    <p><strong><i class="fas fa-tag"></i> Type :</strong>
+                        <span class="badge" th:classappend="${dataset.type == 'TEXTE'} ? 'badge-blue' : 'badge-purple'" th:text="${dataset.type == 'TEXTE'} ? 'Texte simple' : 'Paire de textes'"></span>
+                    </p>
+                    <p><strong><i class="fas fa-list"></i> Classes possibles :</strong>
+                        <span th:each="cls : ${classes}" class="badge badge-green" th:text="${cls}"></span>
+                    </p>
+                </div>
+                <div class="progress-bar mt-2">
+                    <div class="progress-fill cyan" th:style="'width: ' + ${progress} + '%;'"></div>
+                </div>
+            </div>
+
+            <!-- Texte à annoter -->
+            <div class="text-annotation-card" th:if="${textUnit != null}">
+                <div class="text-label"><i class="fas fa-file-alt"></i> TEXTE À ANNOTER</div>
+                <div class="text-content" th:text="${textUnit.text1}"></div>
+
+                <!-- Deuxième texte pour les paires -->
+                <div th:if="${textUnit.text2 != null}">
+                    <hr class="text-divider">
+                    <div class="text-label"><i class="fas fa-exchange-alt"></i> SECOND TEXTE (paire)</div>
+                    <div class="text-content" th:text="${textUnit.text2}"></div>
+                </div>
+            </div>
+
+            <!-- Formulaire d'annotation -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-tags"></i> Choisissez une classe</div>
+                </div>
+
+                <form th:action="@{/annotator/annotate/{taskId}(taskId=${task.id})}" method="post">
+                    <div class="class-btn-group">
+                        <button type="submit" name="selectedClass" th:value="${class}"
+                                class="class-btn" th:each="class : ${classes}" th:text="${class}">
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Bouton retour -->
+            <div class="flex justify-center mt-3">
+                <a href="/annotator/tasks" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Retour à mes tâches</a>
+            </div>
+
         </div>
-    </div>
-
-    <form th:action="@{/annotator/annotate/{taskId}(taskId=${task.id})}" method="post">
-        <h3>🏷️ Choisissez une classe :</h3>
-        <div class="class-buttons">
-            <button type="submit" name="selectedClass" th:value="${class}"
-                    class="class-btn" th:each="class : ${classes}" th:text="${class}">
-            </button>
-        </div>
-    </form>
+    </main>
 </div>
+
 </body>
 </html>

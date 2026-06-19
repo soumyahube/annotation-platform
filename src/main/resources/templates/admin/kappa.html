@@ -2,131 +2,100 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fleiss Kappa - Accord inter-annotateurs</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-        .dataset-info {
-            background: #e8f5e9;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-        }
-        .kappa-value {
-            font-size: 72px;
-            font-weight: bold;
-            margin: 30px 0;
-        }
-        .interpretation {
-            font-size: 28px;
-            margin: 20px 0;
-        }
-        .excellent {
-            color: #4CAF50;
-        }
-        .good {
-            color: #8BC34A;
-        }
-        .moderate {
-            color: #FF9800;
-        }
-        .poor {
-            color: #f44336;
-        }
-        .description {
-            margin: 30px 0;
-            padding: 20px;
-            background: #f9f9f9;
-            border-radius: 8px;
-            text-align: left;
-        }
-        .scale {
-            margin: 20px 0;
-            padding: 15px;
-            background: #f0f0f0;
-            border-radius: 8px;
-        }
-        .scale-item {
-            display: inline-block;
-            width: 18%;
-            font-size: 12px;
-            text-align: center;
-        }
-        .nav-links {
-            margin-bottom: 20px;
-        }
-        .nav-links a {
-            margin-right: 15px;
-            color: #4CAF50;
-            text-decoration: none;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
 </head>
 <body>
-<div class="container">
-    <div class="nav-links">
-        <a href="/home">🏠 Accueil</a>
-        <a href="/admin/datasets">📊 Retour aux datasets</a>
-    </div>
 
-    <h1>📊 Fleiss Kappa</h1>
-    <h3>Mesure d'accord inter-annotateurs</h3>
+<div class="app-layout">
 
-    <div class="dataset-info">
-        <strong>Dataset :</strong> <span th:text="${dataset.name}"></span><br>
-        <strong>Type :</strong> <span th:text="${dataset.type}"></span><br>
-        <strong>Classes :</strong> <span th:text="${dataset.classes}"></span>
-    </div>
+    <div th:replace="~{fragments :: sidebar-admin}"></div>
 
-    <div class="kappa-value" th:classappend="${colorClass}" th:text="${kappa}"></div>
+    <!-- Main Content -->
+    <main class="main-content">
 
-    <div class="interpretation" th:classappend="${colorClass}" th:text="${interpretation}"></div>
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="topbar-title"><i class="fas fa-chart-bar"></i> Fleiss Kappa</div>
+            <div class="topbar-user">
+                <div class="avatar avatar-admin">
+                    <span th:text="${#authentication.name.charAt(0)}"></span>
+                </div>
+                <span th:text="${#authentication.name}"></span>
+            </div>
+        </header>
 
-    <div class="description">
-        <p><strong>ℹ️ Qu'est-ce que le Fleiss Kappa ?</strong></p>
-        <p>Le Fleiss Kappa mesure l'accord entre plusieurs annotateurs. Plus la valeur est proche de 1, plus l'accord est fort.</p>
-    </div>
+        <!-- Page Content -->
+        <div class="page-body">
 
-    <div class="scale">
-        <p><strong>📈 Échelle d'interprétation :</strong></p>
-        <div>
-            <span class="scale-item" style="color:#f44336;">&lt; 0.21<br>Faible</span>
-            <span class="scale-item" style="color:#FF9800;">0.21-0.40<br>Correct</span>
-            <span class="scale-item" style="color:#8BC34A;">0.41-0.60<br>Modéré</span>
-            <span class="scale-item" style="color:#4CAF50;">0.61-0.80<br>Substantiel</span>
-            <span class="scale-item" style="color:#2E7D32;">0.81-1.00<br>Parfait</span>
+            <!-- Informations du dataset -->
+            <div class="info-card mb-3">
+                <h3 th:text="${dataset.name}"></h3>
+                <div class="flex" style="gap: 20px; flex-wrap: wrap; margin-top: 10px;">
+                    <p><strong>Type:</strong> <span class="badge" th:classappend="${dataset.type == 'TEXTE'} ? 'badge-blue' : 'badge-purple'" th:text="${dataset.type == 'TEXTE'} ? 'Texte simple' : 'Paire de textes'"></span></p>
+                    <p><strong>Classes:</strong> <span class="badge badge-green" th:text="${dataset.classes}"></span></p>
+                </div>
+            </div>
+
+            <!-- Kappa Display -->
+            <div class="card" style="text-align: center;">
+                <div class="kappa-display">
+                    <div class="kappa-value" th:classappend="${colorClass}" th:text="${kappa}"></div>
+                    <div class="kappa-label" th:classappend="${colorClass}" th:text="${interpretation}"></div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-info-circle"></i> Qu'est-ce que le Fleiss Kappa ?</div>
+                </div>
+                <p>Le Fleiss Kappa mesure l'accord entre plusieurs annotateurs. Plus la valeur est proche de 1, plus l'accord est fort.</p>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><i class="fas fa-check-circle" style="color: var(--success);"></i> κ = 1 : Accord parfait</li>
+                    <li><i class="fas fa-minus-circle" style="color: var(--warning);"></i> κ = 0 : Accord aléatoire</li>
+                    <li><i class="fas fa-times-circle" style="color: var(--danger);"></i> κ &lt; 0 : Désaccord systématique</li>
+                </ul>
+            </div>
+
+            <!-- Échelle d'interprétation -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-chart-line"></i> Échelle d'interprétation</div>
+                </div>
+                <div class="kappa-scale">
+                    <div class="kappa-scale-item">
+                        <div class="kappa-scale-value">&lt; 0.21</div>
+                        <div class="kappa-scale-label"><i class="fas fa-times-circle"></i> Faible</div>
+                    </div>
+                    <div class="kappa-scale-item">
+                        <div class="kappa-scale-value">0.21 - 0.40</div>
+                        <div class="kappa-scale-label"><i class="fas fa-minus-circle"></i> Correct</div>
+                    </div>
+                    <div class="kappa-scale-item">
+                        <div class="kappa-scale-value">0.41 - 0.60</div>
+                        <div class="kappa-scale-label"><i class="fas fa-check-circle"></i> Modéré</div>
+                    </div>
+                    <div class="kappa-scale-item">
+                        <div class="kappa-scale-value">0.61 - 0.80</div>
+                        <div class="kappa-scale-label"><i class="fas fa-star"></i> Substantiel</div>
+                    </div>
+                    <div class="kappa-scale-item">
+                        <div class="kappa-scale-value">0.81 - 1.00</div>
+                        <div class="kappa-scale-label"><i class="fas fa-trophy"></i> Parfait</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bouton retour -->
+            <div class="flex justify-center mt-3">
+                <a href="/admin/datasets" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Retour à la liste des datasets</a>
+            </div>
+
         </div>
-    </div>
-
-    <button onclick="window.location.href='/admin/datasets'">← Retour à la liste des datasets</button>
+    </main>
 </div>
+
 </body>
 </html>

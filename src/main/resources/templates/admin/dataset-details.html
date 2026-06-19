@@ -1,164 +1,85 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Détails du dataset</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1, h2 { color: #333; }
-        .info-card {
-            background: #e8f5e9;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .nav-links {
-            margin-bottom: 20px;
-        }
-        .nav-links a {
-            margin-right: 15px;
-            color: #4CAF50;
-        }
-        button {
-            background-color: #f44336;
-            color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .message {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-        }
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .progress-bar {
-            width: 100%;
-            background-color: #f0f0f0;
-            border-radius: 5px;
-        }
-        .progress-fill {
-            background-color: #4CAF50;
-            height: 20px;
-            border-radius: 5px;
-            text-align: center;
-            color: white;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-<div class="container">
-    <div class="nav-links">
-        <a href="/home">🏠 Accueil</a>
-        <a href="/admin/datasets">📊 Retour à la liste</a>
-    </div>
 
-    <h1>🔍 Détails du dataset</h1>
-
-    <div th:if="${message}" class="message success" th:text="${message}"></div>
-
-    <!-- Informations du dataset -->
-    <div class="info-card" th:if="${dataset != null}">
-        <h3 th:text="${dataset.name}"></h3>
-        <p><strong>Description:</strong> <span th:text="${dataset.description}"></span></p>
-        <p><strong>Type:</strong> <span th:text="${dataset.type}"></span></p>
-        <p><strong>Classes possibles:</strong> <span th:text="${dataset.classes}"></span></p>
-        <p><strong>Nombre total de textes:</strong> <span th:text="${dataset.textUnits.size()}"></span></p>
-        <p><strong>Avancement:</strong> <span th:text="${progress} + '%'"></span></p>
-        <div class="progress-bar">
-            <div class="progress-fill" th:style="'width: ' + ${progress} + '%;'">[[${progress}]]%</div>
-        </div>
-    </div>
-
-    <!-- Liste des annotateurs affectés -->
-    <h2>👥 Annotateurs affectés</h2>
-    <table th:if="${annotators != null and annotators.size() > 0}">
-        <thead>
-        <tr>
-            <th>Nom d'utilisateur</th>
-            <th>Tâches assignées</th>
-            <th>Tâches complétées</th>
-            <th>Avancement</th>
-            <th>Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="annotator : ${annotators}">
-            <td th:text="${annotator.username}"></td>
-            <td th:text="${annotator.totalTasks}"></td>
-            <td th:text="${annotator.completedTasks}"></td>
-            <td>
-                <span th:text="${annotator.progress} + '%'"></span>
-                <div class="progress-bar">
-                    <div class="progress-fill" th:style="'width: ' + ${annotator.progress} + '%;'" th:text="${annotator.progress} + '%'"></div>
+<div class="app-layout">
+    <div th:replace="~{fragments :: sidebar-admin}"></div>
+    <main class="main-content">
+        <header class="topbar">
+            <div class="topbar-title"><i class="fas fa-search"></i> Détails du dataset</div>
+            <div class="topbar-user">
+                <div class="avatar avatar-admin">
+                    <span th:text="${#authentication.name.charAt(0)}"></span>
                 </div>
-            </td>
-            <td>
-                <form th:action="@{/admin/datasets/{id}/remove-annotator(id=${dataset.id})}" method="post" style="display:inline;">
-                    <input type="hidden" name="annotatorId" th:value="${annotator.id}"/>
-                    <button type="submit" onclick="return confirm('Supprimer cet annotateur ? Son travail déjà effectué sera conservé.')">❌ Désaffecter</button>
-                </form>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-    <p th:if="${annotators == null or annotators.size() == 0}">Aucun annotateur affecté à ce dataset.</p>
+                <span th:text="${#authentication.name}"></span>
+            </div>
+        </header>
+        <div class="page-body">
 
-    <!-- Liste des textes à annoter -->
-    <h2>📝 Liste des textes</h2>
-    <table th:if="${dataset != null and dataset.textUnits.size() > 0}">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Texte 1</th>
-            <th>Texte 2</th>
-            <th>Status</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="textUnit : ${dataset.textUnits}">
-            <td th:text="${textUnit.id}"></td>
-            <td th:text="${#strings.length(textUnit.text1) > 50 ? #strings.substring(textUnit.text1, 0, 50) + '...' : textUnit.text1}"></td>
-            <td th:text="${textUnit.text2 != null ? (#strings.length(textUnit.text2) > 50 ? #strings.substring(textUnit.text2, 0, 50) + '...' : textUnit.text2) : '-'}"></td>
-            <td>
-                <span th:if="${textUnit.completedCount >= 3}" style="color: green;">✅ Complété</span>
-                <span th:if="${textUnit.completedCount > 0 and textUnit.completedCount < 3}" style="color: orange;">⏳ Partiel (<span th:text="${textUnit.completedCount}"></span>/3)</span>
-                <span th:if="${textUnit.completedCount == 0}" style="color: red;">⏰ En attente</span>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-    <p th:if="${dataset == null or dataset.textUnits.size() == 0}">Aucun texte dans ce dataset.</p>
+            <!-- Message flash -->
+            <div th:if="${message}" class="alert alert-success">
+                <span class="alert-icon"><i class="fas fa-check-circle"></i></span>
+                <span th:text="${message}"></span>
+            </div>
+
+            <!-- Dataset info -->
+            <div th:if="${dataset != null}" class="info-card">
+                <h2 th:text="${dataset.name}"></h2>
+                <p><strong>Description :</strong> <span th:text="${dataset.description}"></span></p>
+                <p><strong>Type :</strong>
+                    <span class="badge" th:classappend="${dataset.type == 'TEXTE'} ? 'badge-blue' : 'badge-purple'" th:text="${dataset.type == 'TEXTE'} ? 'Texte simple' : 'Paire de textes'"></span>
+                </p>
+                <p><strong>Classes :</strong> <span th:text="${dataset.classes}"></span></p>
+                <p><strong>Nombre de textes :</strong> <span th:text="${dataset.textUnits.size()}"></span></p>
+                <p><strong>Avancement :</strong> <span th:text="${progress} + '%'"></span></p>
+                <div class="progress-bar">
+                    <div class="progress-fill green" th:style="'width: ' + ${progress} + '%;'"></div>
+                </div>
+            </div>
+            <div th:if="${dataset == null}" class="alert alert-error">
+                <span class="alert-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                <span>Dataset non trouvé !</span>
+            </div>
+
+            <!-- Annotateurs -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-users"></i> Annotateurs affectés</div>
+                </div>
+                <div class="table-wrap">
+                    <table th:if="${not #lists.isEmpty(annotators)}">
+                        <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Tâches</th>
+                            <th>Complétées</th>
+                            <th>Progression</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="a : ${annotators}">
+                            <td th:text="${a.username}"></td>
+                            <td th:text="${a.totalTasks}"></td>
+                            <td th:text="${a.completedTasks}"></td>
+                            <td th:text="${a.progress} + '%'"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <p th:if="${#lists.isEmpty(annotators)}" class="table-empty">Aucun annotateur affecté.</p>
+                </div>
+            </div>
+
+            <a href="/admin/datasets" class="btn btn-outline mt-3"><i class="fas fa-arrow-left"></i> Retour</a>
+        </div>
+    </main>
 </div>
+
 </body>
 </html>

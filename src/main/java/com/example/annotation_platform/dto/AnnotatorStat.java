@@ -1,17 +1,15 @@
-package com.example.annotation_platform.controller;
+package com.example.annotation_platform.dto;
 
-public class AnnotatorProgress {
-    private Long id;
+public class AnnotatorStat {
     private String username;
     private int totalTasks;
     private int completedTasks;
     private int progress;
 
     // Constructeurs
-    public AnnotatorProgress() {}
+    public AnnotatorStat() {}
 
-    public AnnotatorProgress(Long id, String username, int totalTasks, int completedTasks, int progress) {
-        this.id = id;
+    public AnnotatorStat(String username, int totalTasks, int completedTasks, int progress) {
         this.username = username;
         this.totalTasks = totalTasks;
         this.completedTasks = completedTasks;
@@ -19,9 +17,6 @@ public class AnnotatorProgress {
     }
 
     // Getters et Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
 

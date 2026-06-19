@@ -1,4 +1,4 @@
-package com.example.annotation_platform.controller;
+package com.example.annotation_platform.dto;
 
 public class DatasetStat {
     private String name;
